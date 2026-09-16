@@ -1,0 +1,118 @@
+<div class="chrome">
+  <span>Bluecrow &middot; Instrument</span>
+  <span class="sp"></span>
+  <div class="seg" role="group" aria-label="Viewport">
+    <button id="vpPhone" aria-pressed="true">Mobile</button>
+    <button id="vpFull" aria-pressed="false">Desktop</button>
+  </div>
+  <button class="nt" id="notesBtn" aria-pressed="false">Notes</button>
+</div>
+
+<div class="stagewrap">
+<div id="stage">
+
+  <div class="topbar">
+    <span class="wm">{{W:Bluecrow}}</span>
+    <span class="cart">CART [00]</span>
+  </div>
+
+  <div id="home">
+    <section class="chapter" data-i="0" data-key="OPTIC">
+      <div class="env" style="background-image:url(img/optic-env.jpg)"></div>
+      <div class="glow"></div>
+      <div class="headline">{{W:OPTIC}}</div>
+      <div class="prodwrap"><img class="prod" src="img/optic-cut.png" alt="Bluecrow Optic sunglasses"></div>
+      <div class="info">
+        <div class="eyebrow">[ 01 / 03 ] &nbsp; Eyewear</div>
+        <p class="desc">Polarised mineral glass in an injection-moulded acetate frame.</p>
+      </div>
+      <div class="buy">
+        <span class="price">&euro;240</span>
+        <button class="route" data-open="OPTIC">View product <span aria-hidden="true">&rarr;</span></button>
+      </div>
+    </section>
+
+    <section class="chapter" data-i="1" data-key="ELIXIR">
+      <div class="env" style="background-image:url(img/elixir-env.jpg)"></div>
+      <div class="glow"></div>
+      <div class="headline">{{W:ELIXIR}}</div>
+      <div class="prodwrap"><img class="prod" src="img/elixir-cut.png" alt="Bluecrow Elixir eau de parfum"></div>
+      <div class="info">
+        <div class="eyebrow">[ 02 / 03 ] &nbsp; Fragrance</div>
+        <p class="desc">Iris and black pepper over a dry mineral base.</p>
+      </div>
+      <div class="buy">
+        <span class="price">&euro;145</span>
+        <button class="route" data-open="ELIXIR">View product <span aria-hidden="true">&rarr;</span></button>
+      </div>
+    </section>
+
+    <section class="chapter" data-i="2" data-key="SONAR">
+      <div class="env" style="background-image:url(img/sonar-env.jpg)"></div>
+      <div class="glow"></div>
+      <div class="headline">{{W:SONAR}}</div>
+      <div class="prodwrap"><img class="prod" src="img/sonar-cut.png" alt="Bluecrow Sonar in-ear monitors"></div>
+      <div class="info">
+        <div class="eyebrow">[ 03 / 03 ] &nbsp; Audio</div>
+        <p class="desc">A 9.2 mm dynamic driver in a machined housing.</p>
+      </div>
+      <div class="buy">
+        <span class="price">&euro;180</span>
+        <button class="route" data-open="SONAR">View product <span aria-hidden="true">&rarr;</span></button>
+      </div>
+    </section>
+  </div>
+
+  <nav class="rail" id="rail" aria-label="Products"></nav>
+
+  <div id="product" aria-hidden="true">
+    <div class="techbg"></div>
+    <div class="hatch"></div>
+    <div class="ptr" id="ptr"></div>
+    <div class="cell" id="cell"></div>
+    <div class="pscroll">
+    <div class="pwrap">
+      <div class="pnav">
+        <button id="back">&larr; &nbsp;Discovery</button>
+        <span>CART [00]</span>
+      </div>
+      <div class="phero">
+        <div class="glow"></div>
+        <div class="pstage" id="pStage"><img id="pImg" alt=""></div>
+      </div>
+      <div class="pbody">
+        <div class="eyebrow" id="pCat"></div>
+        <div class="pname" id="pName"></div>
+        <p class="pdesc" id="pDesc"></p>
+        <dl class="specs" id="pSpecs"></dl>
+        <div class="pbuy">
+          <span class="price" id="pPrice"></span>
+          <button class="add">Add to cart</button>
+        </div>
+        <div class="pnote" id="pRef"></div>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <div id="notes">
+    <button class="close" id="notesClose">Close &times;</button>
+    <h3>Interaction &amp; transition notes</h3>
+    <div class="n"><b>Chapter change</b><p>Vertical scroll-snap, one product per screen. The environment plate settles from a 1.06 scale while the product rises and fades in behind it &mdash; depth arrives before detail, so each chapter reads as a space you enter rather than a slide that swaps.</p></div>
+    <div class="n"><b>Depth</b><p>Every product is a true alpha cutout composited over a defocused plate from its own shoot. The headline sits <em>between</em> those two layers, so the name passes behind the object. Nothing is masked and nothing is doubled.</p></div>
+    <div class="n"><b>Navigator</b><p>A fixed right rail carries all three numbers and abbreviations at once. The active cell turns blue; tapping any cell snaps to that chapter. Position in the sequence is always legible without a progress bar.</p></div>
+    <div class="n"><b>Route to purchase</b><p>&ldquo;View product&rdquo; lifts the product page up over the chapter. The chapter stays mounted underneath, so dismissing returns you to the exact point in the sequence rather than to the top.</p></div>
+    <div class="n"><b>Restraint</b><p>Blue appears three times and no more: the active navigator cell, the route label, and the purchase border. Everything else is white, grey, or a hairline.</p></div>
+    <div class="n"><b>Lines</b><p>One hairline weight runs through the whole system &mdash; the top bar, the rail cells, the specification rows and the purchase block. It is the only divider used anywhere.</p></div>
+    <div class="n"><b>Desktop</b><p>The same components re-anchor rather than re-flow: the product moves off-centre to the right, the headline bleeds further left behind it, and the information column settles bottom-left. The rail and the hairline weight are unchanged.</p></div>
+    <div class="n"><b>Reduced motion</b><p>Entrance transforms and smooth scrolling are both dropped when the viewer asks for reduced motion. The composition is identical at rest.</p></div>
+  </div>
+
+</div>
+</div>
+
+<div id="glyphs" hidden>
+  <div data-g="OPTIC">{{W:OPTIC}}</div>
+  <div data-g="ELIXIR">{{W:ELIXIR}}</div>
+  <div data-g="SONAR">{{W:SONAR}}</div>
+</div>

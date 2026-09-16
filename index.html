@@ -1,0 +1,618 @@
+<title>Bluecrow Instrument</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400&display=swap">
+<style>
+:root{
+  --void:#000; --white:#EEF1F5; --grey:#78828F; --dim:#434B56; --faint:#222830;
+  --blue:#0066B0; --blue-lift:#1E8AE6;
+  --l1:rgba(238,241,245,.08); --l2:rgba(238,241,245,.15); --l3:rgba(238,241,245,.30);
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--void);color:var(--white);font-family:var(--sans);font-weight:300;
+  margin:0;display:flex;flex-direction:column;overflow:hidden;-webkit-font-smoothing:antialiased}
+svg.mk{display:block;fill:currentColor;width:100%;height:auto}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:1px solid var(--blue-lift);outline-offset:3px}
+
+/* ---------- prototype chrome (not part of the site) ---------- */
+.chrome{flex:none;display:flex;align-items:center;gap:14px;padding:0 14px;height:38px;
+  border-bottom:1px solid var(--l1);font-family:var(--mono);font-size:9.5px;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--dim);background:#030405}
+.chrome .sp{flex:1}
+.chrome .seg{display:flex;border:1px solid var(--l2)}
+.chrome .seg button{padding:4px 10px;letter-spacing:.18em;font-size:9.5px;color:var(--dim)}
+.chrome .seg button[aria-pressed="true"]{background:var(--blue);color:#000}
+.chrome .nt[aria-pressed="true"]{color:var(--blue-lift)}
+.stagewrap{flex:1;min-height:0;display:grid;place-items:center;padding:0}
+body[data-vp="phone"] .stagewrap{padding:16px}
+
+/* ---------- stage ---------- */
+#stage{container-type:size;container-name:stage;position:relative;overflow:hidden;
+  width:100%;height:100%;background:var(--void)}
+body[data-vp="phone"] #stage{width:390px;height:min(844px,100%);border:1px solid var(--l2)}
+
+/* ---------- persistent site chrome ---------- */
+.topbar{position:absolute;top:0;left:0;right:0;height:52px;z-index:40;display:flex;
+  align-items:center;justify-content:space-between;padding:0 18px;
+  border-bottom:1px solid var(--l1)}
+.topbar .wm{width:68px;color:var(--blue-lift)}
+.topbar .cart{font-family:var(--mono);font-size:10px;letter-spacing:.22em;color:var(--grey)}
+
+.rail{position:absolute;right:0;top:52px;bottom:0;width:46px;z-index:40;
+  border-left:1px solid var(--l1);display:flex;flex-direction:column}
+.rail button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:9px;border-bottom:1px solid var(--l1);font-family:var(--mono);font-size:9.5px;
+  letter-spacing:.14em;color:var(--grey);position:relative;
+  transition:color .32s,background .32s}
+.rail button::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:var(--blue-lift);transform:scaleY(0);transform-origin:center;
+  transition:transform .4s cubic-bezier(.22,.7,.2,1)}
+.rail button[aria-current="true"]::before{opacity:0}
+.rail .n,.rail .ab{transition:transform .4s cubic-bezier(.22,.7,.2,1)}
+.rail .ab{writing-mode:vertical-rl;letter-spacing:.3em}
+@media(hover:hover){
+  .buy .route:hover{color:#4FA6EC}
+  .buy .route:hover::after{transform:scaleX(1)}
+  .buy .route:hover span{transform:translateX(7px)}
+  .rail button:hover{color:var(--white);background:rgba(0,102,176,.13)}
+  .rail button:hover::before{transform:scaleY(1)}
+  .rail button:hover .n{transform:translateY(-2px)}
+  .rail button:hover .ab{transform:translateY(2px)}
+  .rail button[aria-current="true"]:hover{background:#0A76C6;color:#FFFFFF}
+}
+.rail button[aria-current="true"]{background:var(--blue);color:#FFFFFF}
+.rail button[aria-current="true"] .n{color:#FFFFFF}
+
+/* ---------- chapters ---------- */
+#home{height:100%;overflow-y:auto;scroll-snap-type:y mandatory;scroll-behavior:smooth;
+  scrollbar-width:none}
+#home::-webkit-scrollbar{display:none}
+.chapter{height:100%;scroll-snap-align:start;position:relative;overflow:hidden;
+  --hh:min(17cqh,40cqw); --base:max(178px,22cqh)}
+.env{position:absolute;inset:0;background-size:cover;background-position:center;z-index:0}
+.env::after{content:"";position:absolute;inset:0;
+  background:radial-gradient(66% 52% at 50% 32%,rgba(0,0,0,0) 0%,rgba(0,0,0,.30) 74%,rgba(0,0,0,.76) 100%),
+             linear-gradient(to bottom,rgba(0,0,0,.62) 0%,rgba(0,0,0,0) 20%,rgba(0,0,0,0) 44%,rgba(0,0,0,.88) 86%)}
+.glow{position:absolute;left:50%;bottom:calc(var(--base) + var(--hh)*.4);width:78%;height:40cqh;
+  transform:translateX(-50%);
+  z-index:1;pointer-events:none;
+  background:radial-gradient(50% 50% at 50% 50%,rgba(0,102,176,.12),transparent 72%);filter:blur(28px)}
+
+.headline{position:absolute;left:-4%;bottom:var(--base);z-index:2;color:var(--white)}
+.headline svg{height:var(--hh);width:auto;transform:translate3d(var(--hx,0px),0,0);
+  transition:transform .6s cubic-bezier(.22,.7,.2,1)}
+.prodwrap{position:absolute;left:50%;transform:translateX(-50%);
+  bottom:calc(var(--base) + var(--hh)*.62);width:86%;height:44cqh;z-index:3;
+  perspective:1000px}
+.prod{width:100%;height:100%;display:block;object-fit:contain;object-position:center bottom;
+  transform-origin:center bottom;
+  filter:drop-shadow(0 20px 30px rgba(0,0,0,.62));
+  transform:translate3d(var(--tx,0px),var(--ty,0px),0)
+            rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) scale(var(--sc,1));
+  transition:transform .55s cubic-bezier(.22,.7,.2,1),filter .45s ease}
+.prod.tracking{transition:transform .13s linear,filter .45s ease}
+@media(hover:hover){.prod:hover{filter:drop-shadow(0 34px 44px rgba(0,0,0,.78))}}
+
+.info{position:absolute;left:18px;right:64px;bottom:84px;z-index:5}
+.eyebrow{font-family:var(--mono);font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--grey)}
+.desc{font-size:13px;line-height:1.55;color:var(--grey);margin:14px 0 0;max-width:32ch}
+.buy{position:absolute;left:18px;right:64px;bottom:28px;z-index:5;border-top:1px solid var(--l2);
+  padding-top:14px;display:flex;align-items:center;justify-content:space-between}
+.buy .price{font-family:var(--mono);font-size:14px;letter-spacing:.04em;font-variant-numeric:tabular-nums}
+.buy .route{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--blue-lift);display:flex;align-items:center;gap:8px;position:relative;padding-bottom:7px;
+  transition:color .3s}
+.buy .route::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;
+  background:currentColor;transform:scaleX(0);transform-origin:left center;
+  transition:transform .45s cubic-bezier(.22,.7,.2,1)}
+.buy .route span{display:inline-block;transition:transform .45s cubic-bezier(.22,.7,.2,1)}
+.buy .route:focus-visible::after{transform:scaleX(1)}
+.buy .route:focus-visible span{transform:translateX(7px)}
+
+/* enter motion &#8212; only once JS confirms it can drive it */
+.js .chapter .headline,.js .chapter .prodwrap,
+.js .chapter .info,.js .chapter .buy{opacity:0;transition:opacity .75s ease,transform .95s cubic-bezier(.22,.7,.2,1)}
+.js .chapter .headline{transform:translateY(34px)}
+.js .chapter .prodwrap{transform:translateX(-50%) translateY(22px) scale(1.03)}
+.js .chapter .info,.js .chapter .buy{transform:translateY(14px)}
+.js .chapter .env{transform:scale(1.06);transition:transform 1.6s cubic-bezier(.22,.7,.2,1)}
+.js .chapter.in .headline,.js .chapter.in .info,.js .chapter.in .buy{opacity:1;transform:none}
+.js .chapter.in .prodwrap{opacity:1;transform:translateX(-50%)}
+.js .chapter.in .env{transform:scale(1)}
+@media(prefers-reduced-motion:reduce){
+  .hatch{animation:none}
+  .ptr,.cell,.cal{transition:none}
+  .buy .route::after,.buy .route span,.rail button::before,.rail .n,.rail .ab{transition:none}
+  .js .chapter .headline,.js .chapter .prodwrap,
+  .js .chapter .info,.js .chapter .buy,.js .chapter .env{opacity:1;transition:none}
+  .js .chapter .prodwrap{transform:translateX(-50%)}
+  .prod,.headline svg{transition:none}
+  .js .chapter .headline,.js .chapter .info,.js .chapter .buy,.js .chapter .env{transform:none}
+  #home{scroll-behavior:auto}
+}
+
+/* ---------- product page ---------- */
+#product{position:absolute;inset:0;z-index:60;background:#070C14;overflow:hidden;
+  transform:translateY(100%);visibility:hidden;transition:transform .62s cubic-bezier(.3,.8,.25,1),visibility .62s}
+.pscroll{position:absolute;inset:0;overflow-y:auto;z-index:2;scrollbar-width:none}
+.pscroll::-webkit-scrollbar{display:none}
+
+/* technical ground */
+.techbg{position:absolute;inset:0;z-index:0;pointer-events:none;background-color:#070C14;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='208' height='208'%3E%3Cpath d='M104 97v14M97 104h14' stroke='%23EEF1F5' stroke-opacity='.30' stroke-width='1'/%3E%3C/svg%3E"),
+    linear-gradient(rgba(238,241,245,.042) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(238,241,245,.042) 1px,transparent 1px),
+    radial-gradient(circle,rgba(238,241,245,.10) .5px,transparent .6px);
+  background-size:208px 208px,104px 104px,104px 104px,26px 26px}
+.hatch{position:absolute;inset:-24px;z-index:0;pointer-events:none;
+  background-image:repeating-linear-gradient(45deg,rgba(238,241,245,.030) 0 1px,transparent 1px 8px);
+  animation:hatch 14s linear infinite}
+@keyframes hatch{to{transform:translateX(11.3137px)}}
+.ptr{position:absolute;left:0;top:0;width:440px;height:440px;margin:-220px 0 0 -220px;z-index:1;
+  pointer-events:none;border-radius:50%;
+  background:radial-gradient(circle,rgba(0,102,176,.22),transparent 68%);filter:blur(16px);
+  transform:translate3d(var(--mx,200px),var(--my,220px),0);
+  transition:transform .4s cubic-bezier(.2,.7,.2,1)}
+.cell{position:absolute;left:0;top:0;width:104px;height:104px;z-index:1;pointer-events:none;
+  background:rgba(120,165,220,.06);border:1px solid rgba(238,241,245,.10);
+  transform:translate3d(var(--cx,0px),var(--cy,0px),0);opacity:0;
+  transition:transform .55s cubic-bezier(.2,.7,.2,1),opacity .4s}
+.cell.on{opacity:1}
+#product.open{transform:none;visibility:visible}
+.pwrap{min-height:100%;display:flex;flex-direction:column}
+.pnav{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;
+  padding:0 18px;height:52px;border-bottom:1px solid var(--l1);background:rgba(0,0,0,.82);
+  backdrop-filter:blur(14px);font-family:var(--mono);font-size:10px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--grey)}
+.phero{position:relative;height:52cqh;min-height:260px;flex:none}
+.phero .glow{left:50%;top:50%;bottom:auto;transform:translate(-50%,-50%);width:74%;height:62%}
+.pstage{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  aspect-ratio:var(--ar,.6);max-width:70%;max-height:86%;z-index:3}
+.pstage img{width:100%;height:100%;object-fit:contain;display:block;
+  filter:drop-shadow(0 20px 30px rgba(0,0,0,.62))}
+
+/* feature hotspots */
+.hs{position:absolute;width:28px;height:28px;transform:translate(-50%,-50%);z-index:5;
+  display:grid;place-items:center;padding:0}
+.hs .dot{display:block;width:10px;height:10px;border-radius:50%;border:1px solid var(--blue-lift);
+  background:rgba(0,102,176,.30);transition:background .25s,box-shadow .25s}
+.hs .ring{position:absolute;width:28px;height:28px;border-radius:50%;
+  border:1px solid rgba(30,138,230,.42);opacity:0;transform:scale(.55);
+  transition:opacity .35s,transform .35s}
+.hs[aria-expanded="true"] .dot{background:var(--blue-lift);box-shadow:0 0 12px rgba(30,138,230,.75)}
+.hs[aria-expanded="true"] .ring{opacity:1;transform:scale(1)}
+.cal{position:absolute;bottom:calc(100% + 15px);left:50%;width:196px;padding:11px 13px;
+  background:rgba(4,8,14,.94);border:1px solid var(--l2);text-align:left;pointer-events:none;
+  opacity:0;visibility:hidden;transform:translateX(-50%) translateY(8px);
+  transition:opacity .28s,transform .28s,visibility .28s}
+.hs[aria-expanded="true"] .cal{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0)}
+.cal b{display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:.2em;font-weight:400;
+  text-transform:uppercase;color:var(--blue-lift);margin-bottom:6px}
+.cal i{display:block;font-style:normal;font-size:12px;line-height:1.5;color:var(--grey)}
+.cal::after{content:"";position:absolute;top:100%;left:50%;width:1px;height:15px;
+  background:var(--l3);transform:translateX(-50%)}
+.hs.cal-l .cal{left:-8px;transform:translateX(0) translateY(8px)}
+.hs.cal-l[aria-expanded="true"] .cal{transform:translateX(0)}
+.hs.cal-l .cal::after{left:22px;transform:none}
+.hs.cal-r .cal{left:auto;right:-8px;transform:translateX(0) translateY(8px)}
+.hs.cal-r[aria-expanded="true"] .cal{transform:translateX(0)}
+.hs.cal-r .cal::after{left:auto;right:22px;transform:none}
+.pbody{padding:26px 18px 40px;position:relative;z-index:4;
+  background:linear-gradient(to bottom,rgba(7,12,20,.55),rgba(7,12,20,.93) 10%)}
+.pbody .eyebrow{margin-bottom:16px}
+.pname{width:56%;min-width:150px;color:var(--white);margin-bottom:16px}
+.pdesc{font-size:14px;line-height:1.6;color:var(--grey);max-width:44ch;margin:0 0 26px}
+.specs{border-top:1px solid var(--l2)}
+.specs div{display:flex;justify-content:space-between;gap:16px;padding:12px 0;
+  border-bottom:1px solid var(--l1);font-family:var(--mono);font-size:10.5px;letter-spacing:.12em}
+.specs dt{color:var(--dim);text-transform:uppercase;flex:none}
+.specs dd{margin:0;color:var(--white);text-align:right}
+.pbuy{margin-top:28px;display:flex;align-items:center;gap:14px}
+.pbuy .price{font-family:var(--mono);font-size:19px;letter-spacing:.04em;font-variant-numeric:tabular-nums}
+.pbuy .add{flex:1;border:1px solid var(--blue);color:var(--blue-lift);padding:15px 18px;
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;
+  text-align:center;transition:background .25s,color .25s}
+.pbuy .add:hover{background:var(--blue);color:#000}
+.pnote{margin-top:16px;font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;color:var(--dim);
+  text-transform:uppercase}
+
+/* ---------- notes panel ---------- */
+#notes{position:absolute;inset:0;z-index:80;background:rgba(0,0,0,.96);overflow-y:auto;
+  padding:26px 20px 40px;opacity:0;visibility:hidden;transition:opacity .35s,visibility .35s}
+#notes.open{opacity:1;visibility:visible}
+#notes h3{font-family:var(--mono);font-size:10px;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--blue-lift);margin:0 0 18px;font-weight:400}
+#notes .n{border-top:1px solid var(--l1);padding:13px 0;display:grid;
+  grid-template-columns:78px 1fr;gap:14px}
+#notes .n b{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--dim);font-weight:400}
+#notes .n p{margin:0;font-size:13px;line-height:1.6;color:var(--grey)}
+#notes .close{position:absolute;top:18px;right:18px;font-family:var(--mono);font-size:10px;
+  letter-spacing:.2em;color:var(--grey)}
+
+/* ================= DESKTOP ================= */
+@container stage (min-width:860px){
+  .topbar{height:64px;padding:0 32px}
+  .topbar .wm{width:86px}
+  .rail{top:64px;width:64px}
+  .rail button{font-size:10px;gap:11px}
+  .chapter{--hh:min(30cqh,38cqw); --base:max(196px,27cqh)}
+  .headline{left:-1.5%}
+  .prodwrap{left:52%;width:42%;height:40cqh}
+  .glow{left:52%;width:46%;height:46cqh}
+  .info{left:32px;right:auto;width:34%;bottom:max(96px,15cqh)}
+  .desc{font-size:14px;max-width:34ch}
+  .buy{left:32px;right:96px;bottom:40px;padding-top:16px}
+  .buy .price{font-size:16px}
+  .phero{height:62vh}
+  .pstage{left:30%;max-width:33%;max-height:84%}
+  .phero .glow{left:30%;width:40%;height:66%}
+  .pbody{position:absolute;right:0;top:64px;width:44%;padding:40px 96px 40px 40px;
+    max-height:calc(100% - 64px);overflow-y:auto}
+  .pwrap{min-height:0;height:100%}
+  .phero{height:100%;min-height:0}
+  .pname{width:44%;min-width:170px;margin-bottom:18px}
+  .pbody .eyebrow{margin-bottom:18px}
+  #notes{padding:40px 96px 48px 40px;columns:2;column-gap:56px}
+  #notes h3{column-span:all}
+  #notes .n{break-inside:avoid}
+  .cal{width:224px}
+  .pbody{background:linear-gradient(to right,rgba(7,12,20,0),rgba(7,12,20,.90) 20%)}
+  .pwrap{position:relative}
+}
+</style>
+
+<div class="chrome">
+  <span>Bluecrow &middot; Instrument</span>
+  <span class="sp"></span>
+  <div class="seg" role="group" aria-label="Viewport">
+    <button id="vpPhone" aria-pressed="true">Mobile</button>
+    <button id="vpFull" aria-pressed="false">Desktop</button>
+  </div>
+  <button class="nt" id="notesBtn" aria-pressed="false">Notes</button>
+</div>
+
+<div class="stagewrap">
+<div id="stage">
+
+  <div class="topbar">
+    <span class="wm"><svg class="mk" viewBox="12 -740 2751 753" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Bluecrow"><path d="M384 -193C384 -303 322 -351 245 -356V-359C319 -372 363 -432 363 -515C363 -635 294 -675 210 -675H21C15 -675 12 -674 12 -669V-666C12 -660 15 -659 21 -659H37C51 -659 52 -656 52 -583V-92C52 -19 51 -16 37 -16H21C15 -16 12 -15 12 -9V-6C12 -1 15 0 21 0H209C295 0 384 -44 384 -193ZM251 -511C251 -402 233 -365 192 -365H163V-654H190C230 -654 251 -629 251 -511ZM265 -183C265 -59 243 -21 194 -21H163V-344H191C240 -344 265 -311 265 -183Z M580 0C586 0 589 -1 589 -6V-8C589 -14 586 -15 580 -15H564C551 -15 550 -18 550 -91V-726C550 -736 548 -740 541 -740H418C412 -740 409 -739 409 -733V-731C409 -726 412 -725 418 -725H434C448 -725 449 -722 449 -649V-91C449 -18 448 -15 434 -15H418C412 -15 409 -14 409 -8V-6C409 -1 412 0 418 0Z M968 0C974 0 977 -1 977 -7V-9C977 -14 974 -15 968 -15H952C939 -15 938 -18 938 -91V-510C938 -519 936 -524 929 -524H809C803 -524 800 -523 800 -518V-515C800 -509 803 -508 809 -508H822C835 -508 836 -505 836 -432V-117C825 -64 812 -26 783 -26C756 -26 746 -55 746 -113V-510C746 -519 744 -524 737 -524H614C608 -524 605 -523 605 -518V-515C605 -509 608 -508 614 -508H630C643 -508 644 -505 644 -432V-134C644 -31 690 13 744 13C796 13 829 -19 841 -83H842V-14C842 -4 845 0 851 0Z M1297 -170C1297 -176 1296 -181 1289 -181H1284C1278 -181 1277 -176 1277 -170C1277 -68 1248 -17 1194 -17C1123 -17 1108 -105 1108 -263V-284H1262C1290 -284 1298 -292 1298 -314V-318C1298 -466 1232 -536 1158 -536C1058 -536 998 -421 998 -254C998 -85 1066 13 1173 13C1263 13 1297 -58 1297 -170ZM1201 -346C1201 -313 1191 -305 1160 -305H1108C1108 -458 1119 -518 1156 -518C1190 -518 1201 -476 1201 -346Z M1598 -170C1598 -176 1597 -181 1591 -181H1586C1580 -181 1579 -176 1579 -170C1579 -76 1554 -17 1508 -17C1450 -17 1435 -108 1435 -263C1435 -440 1447 -518 1497 -518C1508 -518 1517 -515 1525 -509C1511 -480 1499 -453 1499 -423C1499 -394 1513 -373 1546 -373C1575 -373 1594 -389 1594 -425C1594 -484 1547 -537 1489 -537C1383 -537 1325 -420 1325 -254C1325 -85 1390 13 1488 13C1565 13 1598 -57 1598 -170Z M1808 0C1814 0 1817 -1 1817 -6V-8C1817 -14 1814 -15 1808 -15H1777C1764 -15 1763 -18 1763 -91V-404C1776 -459 1794 -513 1824 -513C1827 -513 1831 -512 1834 -510C1818 -486 1805 -460 1805 -428C1805 -399 1823 -379 1853 -379C1882 -379 1901 -397 1901 -433C1901 -493 1867 -537 1833 -537C1797 -537 1774 -502 1758 -436H1757V-510C1757 -519 1755 -524 1748 -524H1631C1625 -524 1622 -523 1622 -517V-514C1622 -509 1625 -508 1631 -508H1646C1659 -508 1662 -504 1662 -433V-91C1662 -18 1661 -15 1647 -15H1631C1625 -15 1622 -14 1622 -8V-6C1622 -1 1625 0 1631 0Z M2245 -273C2245 -437 2190 -537 2086 -537C1977 -537 1918 -419 1918 -252C1918 -88 1974 13 2079 13C2187 13 2245 -107 2245 -273ZM2135 -272C2135 -73 2123 -8 2081 -8C2040 -8 2029 -65 2029 -253C2029 -453 2041 -516 2082 -516C2124 -516 2135 -460 2135 -272Z M2754 -508C2760 -508 2763 -509 2763 -515V-518C2763 -523 2760 -524 2754 -524H2665C2659 -524 2656 -523 2656 -518V-515C2656 -509 2659 -508 2665 -508H2670C2686 -508 2696 -490 2696 -450C2696 -415 2690 -368 2684 -334L2655 -162H2654L2608 -422C2601 -459 2599 -480 2599 -492C2599 -507 2603 -508 2612 -508H2617C2623 -508 2626 -509 2626 -515V-518C2626 -523 2623 -524 2617 -524H2476C2470 -524 2467 -523 2467 -518V-515C2467 -509 2470 -508 2476 -508H2479C2494 -508 2504 -489 2504 -444C2504 -411 2496 -367 2491 -338L2457 -162H2456L2416 -422C2410 -457 2408 -478 2408 -491C2408 -508 2413 -508 2422 -508H2427C2433 -508 2436 -509 2436 -515V-518C2436 -523 2433 -524 2427 -524H2272C2266 -524 2263 -523 2263 -518V-515C2263 -509 2266 -508 2272 -508H2276C2289 -508 2290 -508 2306 -422L2385 6C2386 12 2388 13 2391 13H2434C2438 13 2439 11 2440 6L2516 -370H2517L2587 6C2588 12 2589 13 2592 13H2635C2639 13 2640 11 2641 6L2705 -342C2712 -382 2721 -424 2725 -442C2737 -497 2740 -508 2752 -508Z"/></svg></span>
+    <span class="cart">CART [00]</span>
+  </div>
+
+  <div id="home">
+    <section class="chapter" data-i="0" data-key="OPTIC">
+      <div class="env" style="background-image:url(img/optic-env.jpg)"></div>
+      <div class="glow"></div>
+      <div class="headline"><svg class="mk" viewBox="15 -688 1702 701" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Optic"><path d="M402 -350C402 -559 330 -688 211 -688C90 -688 15 -538 15 -325C15 -116 87 13 206 13C326 13 402 -137 402 -350ZM281 -349C281 -132 272 -10 208 -10C145 -10 135 -129 135 -326C135 -543 147 -666 209 -666C272 -666 281 -546 281 -349Z M625 0C631 0 634 -1 634 -6V-9C634 -15 631 -16 625 -16H594C581 -16 580 -19 580 -92V-279H624C716 -279 783 -340 783 -480C783 -637 700 -675 625 -675H438C432 -675 429 -674 429 -669V-666C429 -660 432 -659 438 -659H454C468 -659 469 -656 469 -583V-92C469 -19 468 -16 454 -16H438C432 -16 429 -15 429 -9V-6C429 -1 432 0 438 0ZM607 -300H580V-654H606C644 -654 668 -627 668 -478C668 -345 650 -300 607 -300Z M1065 0C1071 0 1074 -1 1074 -6V-9C1074 -15 1071 -16 1065 -16H1050C1036 -16 1035 -19 1035 -92V-654H1046C1102 -654 1132 -570 1132 -468V-443C1132 -437 1133 -434 1138 -434H1142C1149 -434 1150 -437 1150 -443V-666C1150 -672 1149 -675 1142 -675H816C810 -675 809 -672 809 -666V-443C809 -437 810 -434 816 -434H821C826 -434 827 -437 827 -443V-468C827 -570 857 -654 912 -654H924V-92C924 -19 923 -16 909 -16H893C887 -16 884 -15 884 -9V-6C884 -1 887 0 893 0Z M1356 0C1362 0 1365 -1 1365 -6V-9C1365 -15 1362 -16 1356 -16H1340C1327 -16 1326 -19 1326 -92V-583C1326 -656 1327 -659 1340 -659H1356C1362 -659 1365 -660 1365 -666V-669C1365 -674 1362 -675 1356 -675H1183C1177 -675 1174 -674 1174 -669V-666C1174 -660 1177 -659 1183 -659H1200C1214 -659 1215 -656 1215 -583V-92C1215 -19 1214 -16 1200 -16H1183C1177 -16 1174 -15 1174 -9V-6C1174 -1 1177 0 1183 0Z M1701 5C1706 5 1707 2 1707 -4L1717 -245C1717 -251 1716 -254 1710 -254H1705C1700 -254 1699 -252 1699 -246L1698 -223C1693 -107 1646 -7 1592 -7C1531 -7 1511 -111 1511 -336C1511 -605 1536 -669 1585 -669C1638 -669 1676 -544 1676 -459V-453C1676 -447 1677 -444 1682 -444H1687C1693 -444 1694 -447 1694 -453V-671C1694 -677 1693 -680 1688 -680H1686C1680 -680 1679 -677 1678 -671L1676 -657C1657 -672 1624 -688 1585 -688C1462 -688 1391 -547 1391 -334C1391 -138 1458 13 1586 13C1622 13 1662 -1 1690 -19L1691 -5C1692 1 1693 4 1699 5Z"/></svg></div>
+      <div class="prodwrap"><img class="prod" src="img/optic-cut.png" alt="Bluecrow Optic sunglasses"></div>
+      <div class="info">
+        <div class="eyebrow">[ 01 / 03 ] &nbsp; Eyewear</div>
+        <p class="desc">Polarised mineral glass in an injection-moulded acetate frame.</p>
+      </div>
+      <div class="buy">
+        <span class="price">&euro;240</span>
+        <button class="route" data-open="OPTIC">View product <span aria-hidden="true">&rarr;</span></button>
+      </div>
+    </section>
+
+    <section class="chapter" data-i="1" data-key="ELIXIR">
+      <div class="env" style="background-image:url(img/elixir-env.jpg)"></div>
+      <div class="glow"></div>
+      <div class="headline"><svg class="mk" viewBox="12 -675 1922 688" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Elixir"><path d="M319 0C325 0 326 -3 326 -9L333 -218C333 -225 332 -228 326 -228H322C317 -228 316 -225 316 -218V-209C313 -130 286 -21 221 -21H163V-344H185C215 -344 233 -302 233 -247V-233C233 -227 234 -224 239 -224H242C249 -224 250 -227 250 -233V-470C250 -476 249 -479 242 -479H239C234 -479 233 -476 233 -470V-462C233 -407 215 -365 185 -365H163V-654H202C257 -654 287 -571 287 -469V-457C287 -451 288 -448 293 -448H297C303 -448 304 -451 304 -457V-666C304 -672 303 -675 298 -675H21C15 -675 12 -674 12 -669V-666C12 -660 15 -659 21 -659H37C51 -659 52 -656 52 -583V-92C52 -19 51 -16 37 -16H21C15 -16 12 -15 12 -9V-6C12 -1 15 0 21 0Z M670 0C676 0 677 -3 677 -9L685 -248C685 -254 684 -257 679 -257H674C669 -257 667 -254 667 -248C665 -109 628 -21 569 -21H516V-583C516 -656 517 -659 531 -659H561C567 -659 570 -660 570 -666V-669C570 -674 567 -675 561 -675H374C368 -675 365 -674 365 -669V-666C365 -660 368 -659 374 -659H391C404 -659 405 -656 405 -583V-92C405 -19 404 -16 391 -16H374C368 -16 365 -15 365 -9V-6C365 -1 368 0 374 0Z M884 0C890 0 893 -1 893 -6V-9C893 -15 890 -16 884 -16H868C855 -16 854 -19 854 -92V-583C854 -656 855 -659 868 -659H884C890 -659 893 -660 893 -666V-669C893 -674 890 -675 884 -675H711C705 -675 702 -674 702 -669V-666C702 -660 705 -659 711 -659H728C742 -659 743 -656 743 -583V-92C743 -19 742 -16 728 -16H711C705 -16 702 -15 702 -9V-6C702 -1 705 0 711 0Z M1298 0C1303 0 1305 -1 1305 -6V-9C1305 -15 1303 -16 1298 -16H1292C1276 -16 1272 -19 1236 -131L1155 -378L1205 -513C1222 -560 1234 -592 1244 -614C1263 -656 1272 -659 1283 -659H1284C1290 -659 1293 -660 1293 -666V-669C1293 -674 1290 -675 1284 -675H1161C1155 -675 1152 -674 1152 -669V-666C1152 -660 1155 -659 1161 -659H1169C1189 -659 1197 -640 1197 -608C1197 -577 1187 -536 1173 -491L1146 -407H1145L1102 -544C1086 -599 1077 -629 1077 -644C1077 -656 1082 -659 1091 -659H1099C1105 -659 1108 -660 1108 -666V-669C1108 -674 1105 -675 1099 -675H919C913 -675 910 -674 910 -669V-666C910 -660 913 -659 919 -659H922C938 -659 941 -655 978 -544L1054 -314L999 -162C982 -115 969 -82 959 -60C940 -19 932 -16 920 -16H917C913 -16 910 -15 910 -9V-6C910 -1 913 0 917 0H1046C1050 0 1052 -1 1052 -6V-9C1052 -15 1050 -16 1046 -16H1035C1016 -16 1007 -35 1007 -67C1007 -98 1017 -139 1031 -184L1063 -282H1064L1112 -131C1130 -76 1138 -47 1138 -32C1138 -20 1132 -16 1123 -16H1114C1109 -16 1106 -15 1106 -9V-6C1106 -1 1109 0 1114 0Z M1503 0C1509 0 1512 -1 1512 -6V-9C1512 -15 1509 -16 1503 -16H1487C1474 -16 1473 -19 1473 -92V-583C1473 -656 1474 -659 1487 -659H1503C1509 -659 1512 -660 1512 -666V-669C1512 -674 1509 -675 1503 -675H1330C1324 -675 1321 -674 1321 -669V-666C1321 -660 1324 -659 1330 -659H1347C1361 -659 1362 -656 1362 -583V-92C1362 -19 1361 -16 1347 -16H1330C1324 -16 1321 -15 1321 -9V-6C1321 -1 1324 0 1330 0Z M1891 -513C1891 -635 1819 -675 1733 -675H1545C1539 -675 1536 -674 1536 -669V-666C1536 -660 1539 -659 1545 -659H1561C1575 -659 1576 -656 1576 -583V-92C1576 -19 1575 -16 1561 -16H1545C1539 -16 1536 -15 1536 -9V-6C1536 -1 1539 0 1545 0H1718C1724 0 1727 -1 1727 -6V-9C1727 -15 1724 -16 1718 -16H1701C1688 -16 1687 -19 1687 -92V-344H1715C1763 -344 1768 -288 1768 -143C1768 -51 1797 13 1865 13C1911 13 1934 -11 1933 -79C1933 -85 1932 -88 1927 -88H1923C1918 -88 1917 -85 1917 -79C1917 -44 1912 -19 1899 -19C1886 -19 1880 -39 1880 -145C1880 -278 1848 -330 1764 -352V-355C1846 -368 1891 -429 1891 -513ZM1776 -511C1776 -404 1758 -365 1716 -365H1687V-654H1715C1753 -654 1776 -629 1776 -511Z"/></svg></div>
+      <div class="prodwrap"><img class="prod" src="img/elixir-cut.png" alt="Bluecrow Elixir eau de parfum"></div>
+      <div class="info">
+        <div class="eyebrow">[ 02 / 03 ] &nbsp; Fragrance</div>
+        <p class="desc">Iris and black pepper over a dry mineral base.</p>
+      </div>
+      <div class="buy">
+        <span class="price">&euro;145</span>
+        <button class="route" data-open="ELIXIR">View product <span aria-hidden="true">&rarr;</span></button>
+      </div>
+    </section>
+
+    <section class="chapter" data-i="2" data-key="SONAR">
+      <div class="env" style="background-image:url(img/sonar-env.jpg)"></div>
+      <div class="glow"></div>
+      <div class="headline"><svg class="mk" viewBox="18 -688 1913 701" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sonar"><path d="M284 -182C284 -281 240 -337 197 -390C154 -443 111 -494 111 -580C111 -634 129 -669 158 -669C203 -669 237 -564 237 -477V-465C237 -459 238 -456 243 -456H247C253 -456 254 -459 254 -465V-671C254 -677 253 -680 248 -680H246C240 -680 238 -677 238 -671L236 -657C220 -673 193 -688 161 -688C77 -688 30 -602 30 -500C30 -414 63 -362 100 -315C147 -257 199 -208 199 -105C199 -41 175 -6 138 -6C76 -6 38 -123 36 -209L35 -227C35 -233 34 -235 29 -235H25C19 -235 18 -232 18 -226L26 -4C26 2 28 5 33 5H35C41 5 43 2 43 -5L44 -18C68 1 102 13 137 13C218 13 284 -68 284 -182Z M706 -350C706 -559 634 -688 515 -688C394 -688 319 -538 319 -325C319 -116 391 13 510 13C630 13 706 -137 706 -350ZM585 -349C585 -132 576 -10 512 -10C449 -10 439 -129 439 -326C439 -543 451 -666 513 -666C576 -666 585 -546 585 -349Z M1050 13C1054 13 1056 11 1056 6V-447C1056 -617 1068 -659 1090 -659H1097C1103 -659 1106 -660 1106 -666V-669C1106 -674 1103 -675 1097 -675H964C958 -675 955 -674 955 -669V-666C955 -660 958 -659 964 -659H981C1015 -659 1033 -618 1033 -447V-218H1032L876 -667C874 -673 871 -675 865 -675H739C733 -675 730 -674 730 -669V-666C730 -660 733 -659 739 -659H755C769 -659 774 -652 774 -575V-228C774 -58 762 -16 739 -16H733C727 -16 724 -15 724 -9V-6C724 -1 727 0 733 0H867C873 0 876 -1 876 -6V-9C876 -15 873 -16 867 -16H849C816 -16 798 -57 798 -228V-523H799L988 6C990 11 992 13 996 13Z M1507 0C1513 0 1516 -1 1516 -6V-9C1516 -15 1513 -16 1507 -16H1502C1483 -16 1481 -24 1459 -131L1348 -679C1346 -687 1345 -688 1339 -688H1288C1283 -688 1282 -686 1281 -679L1192 -233C1183 -186 1172 -138 1165 -105C1148 -35 1144 -16 1127 -16H1123C1117 -16 1114 -15 1114 -9V-6C1114 -1 1117 0 1123 0H1247C1253 0 1256 -1 1256 -6V-9C1256 -15 1253 -16 1247 -16H1236C1214 -16 1200 -43 1200 -93C1200 -138 1208 -195 1217 -239L1218 -248H1318L1340 -131C1349 -81 1354 -53 1354 -37C1354 -19 1348 -16 1338 -16H1327C1321 -16 1318 -15 1318 -9V-6C1318 -1 1321 0 1327 0ZM1314 -270H1222L1268 -503H1269Z M1888 -513C1888 -635 1816 -675 1730 -675H1542C1536 -675 1533 -674 1533 -669V-666C1533 -660 1536 -659 1542 -659H1558C1572 -659 1573 -656 1573 -583V-92C1573 -19 1572 -16 1558 -16H1542C1536 -16 1533 -15 1533 -9V-6C1533 -1 1536 0 1542 0H1715C1721 0 1724 -1 1724 -6V-9C1724 -15 1721 -16 1715 -16H1698C1685 -16 1684 -19 1684 -92V-344H1712C1760 -344 1765 -288 1765 -143C1765 -51 1794 13 1862 13C1908 13 1931 -11 1930 -79C1930 -85 1929 -88 1924 -88H1920C1915 -88 1914 -85 1914 -79C1914 -44 1909 -19 1896 -19C1883 -19 1877 -39 1877 -145C1877 -278 1845 -330 1761 -352V-355C1843 -368 1888 -429 1888 -513ZM1773 -511C1773 -404 1755 -365 1713 -365H1684V-654H1712C1750 -654 1773 -629 1773 -511Z"/></svg></div>
+      <div class="prodwrap"><img class="prod" src="img/sonar-cut.png" alt="Bluecrow Sonar in-ear monitors"></div>
+      <div class="info">
+        <div class="eyebrow">[ 03 / 03 ] &nbsp; Audio</div>
+        <p class="desc">A 9.2 mm dynamic driver in a machined housing.</p>
+      </div>
+      <div class="buy">
+        <span class="price">&euro;180</span>
+        <button class="route" data-open="SONAR">View product <span aria-hidden="true">&rarr;</span></button>
+      </div>
+    </section>
+  </div>
+
+  <nav class="rail" id="rail" aria-label="Products"></nav>
+
+  <div id="product" aria-hidden="true">
+    <div class="techbg"></div>
+    <div class="hatch"></div>
+    <div class="ptr" id="ptr"></div>
+    <div class="cell" id="cell"></div>
+    <div class="pscroll">
+    <div class="pwrap">
+      <div class="pnav">
+        <button id="back">&larr; &nbsp;Discovery</button>
+        <span>CART [00]</span>
+      </div>
+      <div class="phero">
+        <div class="glow"></div>
+        <div class="pstage" id="pStage"><img id="pImg" alt=""></div>
+      </div>
+      <div class="pbody">
+        <div class="eyebrow" id="pCat"></div>
+        <div class="pname" id="pName"></div>
+        <p class="pdesc" id="pDesc"></p>
+        <dl class="specs" id="pSpecs"></dl>
+        <div class="pbuy">
+          <span class="price" id="pPrice"></span>
+          <button class="add">Add to cart</button>
+        </div>
+        <div class="pnote" id="pRef"></div>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <div id="notes">
+    <button class="close" id="notesClose">Close &times;</button>
+    <h3>Interaction &amp; transition notes</h3>
+    <div class="n"><b>Chapter change</b><p>Vertical scroll-snap, one product per screen. The environment plate settles from a 1.06 scale while the product rises and fades in behind it &mdash; depth arrives before detail, so each chapter reads as a space you enter rather than a slide that swaps.</p></div>
+    <div class="n"><b>Depth</b><p>Every product is a true alpha cutout composited over a defocused plate from its own shoot. The headline sits <em>between</em> those two layers, so the name passes behind the object. Nothing is masked and nothing is doubled.</p></div>
+    <div class="n"><b>Navigator</b><p>A fixed right rail carries all three numbers and abbreviations at once. The active cell turns blue; tapping any cell snaps to that chapter. Position in the sequence is always legible without a progress bar.</p></div>
+    <div class="n"><b>Route to purchase</b><p>&ldquo;View product&rdquo; lifts the product page up over the chapter. The chapter stays mounted underneath, so dismissing returns you to the exact point in the sequence rather than to the top.</p></div>
+    <div class="n"><b>Restraint</b><p>Blue appears three times and no more: the active navigator cell, the route label, and the purchase border. Everything else is white, grey, or a hairline.</p></div>
+    <div class="n"><b>Lines</b><p>One hairline weight runs through the whole system &mdash; the top bar, the rail cells, the specification rows and the purchase block. It is the only divider used anywhere.</p></div>
+    <div class="n"><b>Desktop</b><p>The same components re-anchor rather than re-flow: the product moves off-centre to the right, the headline bleeds further left behind it, and the information column settles bottom-left. The rail and the hairline weight are unchanged.</p></div>
+    <div class="n"><b>Reduced motion</b><p>Entrance transforms and smooth scrolling are both dropped when the viewer asks for reduced motion. The composition is identical at rest.</p></div>
+  </div>
+
+</div>
+</div>
+
+<div id="glyphs" hidden>
+  <div data-g="OPTIC"><svg class="mk" viewBox="15 -688 1702 701" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Optic"><path d="M402 -350C402 -559 330 -688 211 -688C90 -688 15 -538 15 -325C15 -116 87 13 206 13C326 13 402 -137 402 -350ZM281 -349C281 -132 272 -10 208 -10C145 -10 135 -129 135 -326C135 -543 147 -666 209 -666C272 -666 281 -546 281 -349Z M625 0C631 0 634 -1 634 -6V-9C634 -15 631 -16 625 -16H594C581 -16 580 -19 580 -92V-279H624C716 -279 783 -340 783 -480C783 -637 700 -675 625 -675H438C432 -675 429 -674 429 -669V-666C429 -660 432 -659 438 -659H454C468 -659 469 -656 469 -583V-92C469 -19 468 -16 454 -16H438C432 -16 429 -15 429 -9V-6C429 -1 432 0 438 0ZM607 -300H580V-654H606C644 -654 668 -627 668 -478C668 -345 650 -300 607 -300Z M1065 0C1071 0 1074 -1 1074 -6V-9C1074 -15 1071 -16 1065 -16H1050C1036 -16 1035 -19 1035 -92V-654H1046C1102 -654 1132 -570 1132 -468V-443C1132 -437 1133 -434 1138 -434H1142C1149 -434 1150 -437 1150 -443V-666C1150 -672 1149 -675 1142 -675H816C810 -675 809 -672 809 -666V-443C809 -437 810 -434 816 -434H821C826 -434 827 -437 827 -443V-468C827 -570 857 -654 912 -654H924V-92C924 -19 923 -16 909 -16H893C887 -16 884 -15 884 -9V-6C884 -1 887 0 893 0Z M1356 0C1362 0 1365 -1 1365 -6V-9C1365 -15 1362 -16 1356 -16H1340C1327 -16 1326 -19 1326 -92V-583C1326 -656 1327 -659 1340 -659H1356C1362 -659 1365 -660 1365 -666V-669C1365 -674 1362 -675 1356 -675H1183C1177 -675 1174 -674 1174 -669V-666C1174 -660 1177 -659 1183 -659H1200C1214 -659 1215 -656 1215 -583V-92C1215 -19 1214 -16 1200 -16H1183C1177 -16 1174 -15 1174 -9V-6C1174 -1 1177 0 1183 0Z M1701 5C1706 5 1707 2 1707 -4L1717 -245C1717 -251 1716 -254 1710 -254H1705C1700 -254 1699 -252 1699 -246L1698 -223C1693 -107 1646 -7 1592 -7C1531 -7 1511 -111 1511 -336C1511 -605 1536 -669 1585 -669C1638 -669 1676 -544 1676 -459V-453C1676 -447 1677 -444 1682 -444H1687C1693 -444 1694 -447 1694 -453V-671C1694 -677 1693 -680 1688 -680H1686C1680 -680 1679 -677 1678 -671L1676 -657C1657 -672 1624 -688 1585 -688C1462 -688 1391 -547 1391 -334C1391 -138 1458 13 1586 13C1622 13 1662 -1 1690 -19L1691 -5C1692 1 1693 4 1699 5Z"/></svg></div>
+  <div data-g="ELIXIR"><svg class="mk" viewBox="12 -675 1922 688" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Elixir"><path d="M319 0C325 0 326 -3 326 -9L333 -218C333 -225 332 -228 326 -228H322C317 -228 316 -225 316 -218V-209C313 -130 286 -21 221 -21H163V-344H185C215 -344 233 -302 233 -247V-233C233 -227 234 -224 239 -224H242C249 -224 250 -227 250 -233V-470C250 -476 249 -479 242 -479H239C234 -479 233 -476 233 -470V-462C233 -407 215 -365 185 -365H163V-654H202C257 -654 287 -571 287 -469V-457C287 -451 288 -448 293 -448H297C303 -448 304 -451 304 -457V-666C304 -672 303 -675 298 -675H21C15 -675 12 -674 12 -669V-666C12 -660 15 -659 21 -659H37C51 -659 52 -656 52 -583V-92C52 -19 51 -16 37 -16H21C15 -16 12 -15 12 -9V-6C12 -1 15 0 21 0Z M670 0C676 0 677 -3 677 -9L685 -248C685 -254 684 -257 679 -257H674C669 -257 667 -254 667 -248C665 -109 628 -21 569 -21H516V-583C516 -656 517 -659 531 -659H561C567 -659 570 -660 570 -666V-669C570 -674 567 -675 561 -675H374C368 -675 365 -674 365 -669V-666C365 -660 368 -659 374 -659H391C404 -659 405 -656 405 -583V-92C405 -19 404 -16 391 -16H374C368 -16 365 -15 365 -9V-6C365 -1 368 0 374 0Z M884 0C890 0 893 -1 893 -6V-9C893 -15 890 -16 884 -16H868C855 -16 854 -19 854 -92V-583C854 -656 855 -659 868 -659H884C890 -659 893 -660 893 -666V-669C893 -674 890 -675 884 -675H711C705 -675 702 -674 702 -669V-666C702 -660 705 -659 711 -659H728C742 -659 743 -656 743 -583V-92C743 -19 742 -16 728 -16H711C705 -16 702 -15 702 -9V-6C702 -1 705 0 711 0Z M1298 0C1303 0 1305 -1 1305 -6V-9C1305 -15 1303 -16 1298 -16H1292C1276 -16 1272 -19 1236 -131L1155 -378L1205 -513C1222 -560 1234 -592 1244 -614C1263 -656 1272 -659 1283 -659H1284C1290 -659 1293 -660 1293 -666V-669C1293 -674 1290 -675 1284 -675H1161C1155 -675 1152 -674 1152 -669V-666C1152 -660 1155 -659 1161 -659H1169C1189 -659 1197 -640 1197 -608C1197 -577 1187 -536 1173 -491L1146 -407H1145L1102 -544C1086 -599 1077 -629 1077 -644C1077 -656 1082 -659 1091 -659H1099C1105 -659 1108 -660 1108 -666V-669C1108 -674 1105 -675 1099 -675H919C913 -675 910 -674 910 -669V-666C910 -660 913 -659 919 -659H922C938 -659 941 -655 978 -544L1054 -314L999 -162C982 -115 969 -82 959 -60C940 -19 932 -16 920 -16H917C913 -16 910 -15 910 -9V-6C910 -1 913 0 917 0H1046C1050 0 1052 -1 1052 -6V-9C1052 -15 1050 -16 1046 -16H1035C1016 -16 1007 -35 1007 -67C1007 -98 1017 -139 1031 -184L1063 -282H1064L1112 -131C1130 -76 1138 -47 1138 -32C1138 -20 1132 -16 1123 -16H1114C1109 -16 1106 -15 1106 -9V-6C1106 -1 1109 0 1114 0Z M1503 0C1509 0 1512 -1 1512 -6V-9C1512 -15 1509 -16 1503 -16H1487C1474 -16 1473 -19 1473 -92V-583C1473 -656 1474 -659 1487 -659H1503C1509 -659 1512 -660 1512 -666V-669C1512 -674 1509 -675 1503 -675H1330C1324 -675 1321 -674 1321 -669V-666C1321 -660 1324 -659 1330 -659H1347C1361 -659 1362 -656 1362 -583V-92C1362 -19 1361 -16 1347 -16H1330C1324 -16 1321 -15 1321 -9V-6C1321 -1 1324 0 1330 0Z M1891 -513C1891 -635 1819 -675 1733 -675H1545C1539 -675 1536 -674 1536 -669V-666C1536 -660 1539 -659 1545 -659H1561C1575 -659 1576 -656 1576 -583V-92C1576 -19 1575 -16 1561 -16H1545C1539 -16 1536 -15 1536 -9V-6C1536 -1 1539 0 1545 0H1718C1724 0 1727 -1 1727 -6V-9C1727 -15 1724 -16 1718 -16H1701C1688 -16 1687 -19 1687 -92V-344H1715C1763 -344 1768 -288 1768 -143C1768 -51 1797 13 1865 13C1911 13 1934 -11 1933 -79C1933 -85 1932 -88 1927 -88H1923C1918 -88 1917 -85 1917 -79C1917 -44 1912 -19 1899 -19C1886 -19 1880 -39 1880 -145C1880 -278 1848 -330 1764 -352V-355C1846 -368 1891 -429 1891 -513ZM1776 -511C1776 -404 1758 -365 1716 -365H1687V-654H1715C1753 -654 1776 -629 1776 -511Z"/></svg></div>
+  <div data-g="SONAR"><svg class="mk" viewBox="18 -688 1913 701" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sonar"><path d="M284 -182C284 -281 240 -337 197 -390C154 -443 111 -494 111 -580C111 -634 129 -669 158 -669C203 -669 237 -564 237 -477V-465C237 -459 238 -456 243 -456H247C253 -456 254 -459 254 -465V-671C254 -677 253 -680 248 -680H246C240 -680 238 -677 238 -671L236 -657C220 -673 193 -688 161 -688C77 -688 30 -602 30 -500C30 -414 63 -362 100 -315C147 -257 199 -208 199 -105C199 -41 175 -6 138 -6C76 -6 38 -123 36 -209L35 -227C35 -233 34 -235 29 -235H25C19 -235 18 -232 18 -226L26 -4C26 2 28 5 33 5H35C41 5 43 2 43 -5L44 -18C68 1 102 13 137 13C218 13 284 -68 284 -182Z M706 -350C706 -559 634 -688 515 -688C394 -688 319 -538 319 -325C319 -116 391 13 510 13C630 13 706 -137 706 -350ZM585 -349C585 -132 576 -10 512 -10C449 -10 439 -129 439 -326C439 -543 451 -666 513 -666C576 -666 585 -546 585 -349Z M1050 13C1054 13 1056 11 1056 6V-447C1056 -617 1068 -659 1090 -659H1097C1103 -659 1106 -660 1106 -666V-669C1106 -674 1103 -675 1097 -675H964C958 -675 955 -674 955 -669V-666C955 -660 958 -659 964 -659H981C1015 -659 1033 -618 1033 -447V-218H1032L876 -667C874 -673 871 -675 865 -675H739C733 -675 730 -674 730 -669V-666C730 -660 733 -659 739 -659H755C769 -659 774 -652 774 -575V-228C774 -58 762 -16 739 -16H733C727 -16 724 -15 724 -9V-6C724 -1 727 0 733 0H867C873 0 876 -1 876 -6V-9C876 -15 873 -16 867 -16H849C816 -16 798 -57 798 -228V-523H799L988 6C990 11 992 13 996 13Z M1507 0C1513 0 1516 -1 1516 -6V-9C1516 -15 1513 -16 1507 -16H1502C1483 -16 1481 -24 1459 -131L1348 -679C1346 -687 1345 -688 1339 -688H1288C1283 -688 1282 -686 1281 -679L1192 -233C1183 -186 1172 -138 1165 -105C1148 -35 1144 -16 1127 -16H1123C1117 -16 1114 -15 1114 -9V-6C1114 -1 1117 0 1123 0H1247C1253 0 1256 -1 1256 -6V-9C1256 -15 1253 -16 1247 -16H1236C1214 -16 1200 -43 1200 -93C1200 -138 1208 -195 1217 -239L1218 -248H1318L1340 -131C1349 -81 1354 -53 1354 -37C1354 -19 1348 -16 1338 -16H1327C1321 -16 1318 -15 1318 -9V-6C1318 -1 1321 0 1327 0ZM1314 -270H1222L1268 -503H1269Z M1888 -513C1888 -635 1816 -675 1730 -675H1542C1536 -675 1533 -674 1533 -669V-666C1533 -660 1536 -659 1542 -659H1558C1572 -659 1573 -656 1573 -583V-92C1573 -19 1572 -16 1558 -16H1542C1536 -16 1533 -15 1533 -9V-6C1533 -1 1536 0 1542 0H1715C1721 0 1724 -1 1724 -6V-9C1724 -15 1721 -16 1715 -16H1698C1685 -16 1684 -19 1684 -92V-344H1712C1760 -344 1765 -288 1765 -143C1765 -51 1794 13 1862 13C1908 13 1931 -11 1930 -79C1930 -85 1929 -88 1924 -88H1920C1915 -88 1914 -85 1914 -79C1914 -44 1909 -19 1896 -19C1883 -19 1877 -39 1877 -145C1877 -278 1845 -330 1761 -352V-355C1843 -368 1888 -429 1888 -513ZM1773 -511C1773 -404 1755 -365 1713 -365H1684V-654H1712C1750 -654 1773 -629 1773 -511Z"/></svg></div>
+</div>
+
+<script>
+(function(){
+  document.documentElement.classList.add('js');
+
+  var P = {
+    OPTIC:{n:'01',ab:'OPT',cat:'Eyewear',price:'\u20AC240',ref:'REF BC-01-052 \u00B7 Cadore, IT',
+      img:'img/optic-cut.png',env:'img/optic-env.jpg',
+      desc:'Polarised mineral glass in an injection-moulded acetate frame. Riveted barrel hinge, no visible fixings.',
+      specs:[['Frame','INJECTION-MOULDED ACETATE'],['Lens','POLARISED MINERAL GLASS'],
+             ['Category','3 / 12 % VLT'],['Hinge','RIVETED BARREL'],['Width','142 MM'],
+             ['Weight','31 G'],['Origin','CADORE, IT']]},
+    ELIXIR:{n:'02',ab:'ELX',cat:'Fragrance',price:'\u20AC145',ref:'REF BC-02-050 \u00B7 Grasse, FR',
+      img:'img/elixir-cut.png',env:'img/elixir-env.jpg',
+      desc:'Iris and black pepper over a dry mineral base. Fifty millilitres in anodised aluminium.',
+      specs:[['Concentration','EAU DE PARFUM / 18 %'],['Volume','50 ML / 1.7 FL OZ'],
+             ['Top','BERGAMOT / PINK PEPPER'],['Heart','IRIS / ORRIS ROOT'],
+             ['Base','VETIVER / LABDANUM'],['Vessel','ANODISED ALUMINIUM'],['Origin','GRASSE, FR']]},
+    SONAR:{n:'03',ab:'SON',cat:'Audio',price:'\u20AC180',ref:'REF BC-03-092',
+      img:'img/sonar-cut.png',env:'img/sonar-env.jpg',
+      desc:'A 9.2 mm dynamic driver in a machined housing. Kevlar-cored cable, three-button inline control.',
+      specs:[['Driver','9.2 MM DYNAMIC'],['Impedance','32 \u03A9'],['Sensitivity','104 DB / MW'],
+             ['Cable','1.2 M OFC, KEVLAR CORE'],['Connector','3.5 MM TRRS'],
+             ['Control','3-BUTTON INLINE'],['Weight','14 G']]}
+  };
+  var HS = {
+    OPTIC:[
+      {x:21,y:54,s:'l',t:'Polarised lens',d:'Ground mineral glass, category 3. Twelve per cent visible light transmission.'},
+      {x:60,y:38,s:'',t:'Barrel hinge',d:'Five-barrel and riveted. No visible fixings on the outer face.'},
+      {x:72,y:45,s:'r',t:'Crow mark',d:'Milled into the temple and inlaid by hand after polishing.'}],
+    ELIXIR:[
+      {x:50,y:11,s:'',t:'Machined cap',d:'Anodised aluminium on a magnetic seat. Closes without a thread.'},
+      {x:50,y:46,s:'',t:'Pad-printed mark',d:'Two-pass print held to a 0.2 mm registration tolerance.'},
+      {x:50,y:88,s:'',t:'Batch etch',d:'Laser-etched batch and fill date. Composed in Grasse.'}],
+    SONAR:[
+      {x:62,y:20,s:'r',t:'9.2 mm driver',d:'Bio-cellulose diaphragm in a machined housing.'},
+      {x:33,y:52,s:'l',t:'Inline control',d:'Three anodised buttons with a tactile detent.'},
+      {x:70,y:89,s:'r',t:'3.5 mm TRRS',d:'Gold-plated, with a moulded strain relief.'}]
+  };
+  var ORDER = ['OPTIC','ELIXIR','SONAR'];
+  var $ = function(s){ return document.querySelector(s); };
+  var home = $('#home'), chapters = [].slice.call(document.querySelectorAll('.chapter'));
+
+  /* ---- navigator ---- */
+  var rail = $('#rail');
+  ORDER.forEach(function(k,i){
+    var b = document.createElement('button');
+    b.innerHTML = '<span class="n">'+P[k].n+'</span><span class="ab">'+P[k].ab+'</span>';
+    b.setAttribute('aria-label','Chapter '+P[k].n+' \u2014 '+k);
+    b.addEventListener('click',function(){
+      chapters[i].scrollIntoView({behavior: motionOK() ? 'smooth' : 'auto'});
+    });
+    rail.appendChild(b);
+  });
+  var railBtns = [].slice.call(rail.children);
+  function motionOK(){ return !window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
+  function setActive(i){
+    railBtns.forEach(function(b,j){ b.setAttribute('aria-current', j===i ? 'true':'false'); });
+  }
+
+  /* ---- chapter entry ---- */
+  chapters[0].classList.add('in'); setActive(0);
+  if ('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(es){
+      es.forEach(function(e){
+        if (e.isIntersecting){
+          e.target.classList.add('in');
+          if (e.intersectionRatio > .55) setActive(+e.target.dataset.i);
+        }
+      });
+    },{root:home, threshold:[.25,.6]});
+    chapters.forEach(function(c){ io.observe(c); });
+  } else {
+    chapters.forEach(function(c){ c.classList.add('in'); });
+  }
+
+  /* ---- product tilt on the homepage chapters ---- */
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var hoverOK = window.matchMedia('(hover:hover)');
+  chapters.forEach(function(ch){
+    var img = ch.querySelector('.prod');
+    if (!img) return;
+    var raf = null, pending = null;
+    function apply(){
+      raf = null;
+      if (!pending) return;
+      var nx = pending[0], ny = pending[1];
+      img.style.setProperty('--ry', (nx * 15).toFixed(2) + 'deg');
+      img.style.setProperty('--rx', (-ny * 10).toFixed(2) + 'deg');
+      img.style.setProperty('--tx', (nx * 18).toFixed(1) + 'px');
+      img.style.setProperty('--ty', (-9 + ny * 6).toFixed(1) + 'px');
+      img.style.setProperty('--sc', '1.05');
+      ch.style.setProperty('--hx', (-nx * 9).toFixed(1) + 'px');
+    }
+    function active(){ return hoverOK.matches && !reduce.matches; }
+    img.addEventListener('pointerenter', function(){
+      if (active()) img.classList.add('tracking');
+    });
+    img.addEventListener('pointermove', function(e){
+      if (!active()) return;
+      var r = img.getBoundingClientRect();
+      pending = [(e.clientX - r.left)/r.width - .5, (e.clientY - r.top)/r.height - .5];
+      if (!raf) raf = requestAnimationFrame(apply);
+    });
+    img.addEventListener('pointerleave', function(){
+      pending = null;
+      if (raf){ cancelAnimationFrame(raf); raf = null; }
+      img.classList.remove('tracking');
+      ['--ry','--rx','--tx','--ty'].forEach(function(v){ img.style.setProperty(v, v === '--ry' || v === '--rx' ? '0deg' : '0px'); });
+      img.style.setProperty('--sc','1');
+      ch.style.setProperty('--hx','0px');
+    });
+  });
+
+  /* ---- product page ---- */
+  var prod = $('#product'), glyphs = $('#glyphs');
+  function openProduct(k){
+    var d = P[k];
+    $('#pCat').innerHTML = '[ '+d.n+' / 03 ] &nbsp; '+d.cat;
+    var g = glyphs.querySelector('[data-g="'+k+'"] svg').cloneNode(true);
+    var nm = $('#pName'); nm.innerHTML=''; nm.appendChild(g);
+    $('#pDesc').textContent = d.desc;
+    $('#pPrice').textContent = d.price;
+    $('#pRef').textContent = d.ref;
+    var img = $('#pImg'), stage = $('#pStage');
+    img.alt = k + ' product image';
+    var fit = function(){
+      if (img.naturalWidth) stage.style.setProperty('--ar', img.naturalWidth/img.naturalHeight);
+    };
+    img.onload = fit; img.src = d.img; fit();
+    renderHotspots(k, stage);
+    var dl = $('#pSpecs'); dl.innerHTML='';
+    d.specs.forEach(function(r){
+      var w=document.createElement('div');
+      w.innerHTML = '<dt>'+r[0]+'</dt><dd>'+r[1]+'</dd>';
+      dl.appendChild(w);
+    });
+    closeHS();
+    prod.classList.add('open'); prod.setAttribute('aria-hidden','false');
+    $('.pscroll').scrollTop = 0; $('#back').focus();
+  }
+  function closeProduct(){
+    closeHS();
+    prod.classList.remove('open'); prod.setAttribute('aria-hidden','true');
+  }
+  /* ---- feature hotspots ---- */
+  var cellEl = $('#cell'), ptrEl = $('#ptr');
+  function renderHotspots(k, stage){
+    [].slice.call(stage.querySelectorAll('.hs')).forEach(function(b){ b.remove(); });
+    (HS[k]||[]).forEach(function(h){
+      var b = document.createElement('button');
+      b.className = 'hs' + (h.s ? ' cal-'+h.s : '');
+      b.style.left = h.x+'%'; b.style.top = h.y+'%';
+      b.setAttribute('aria-expanded','false');
+      b.setAttribute('aria-label', h.t + '. ' + h.d);
+      b.innerHTML = '<span class="ring"></span><span class="dot"></span>' +
+        '<span class="cal"><b>'+h.t+'</b><i>'+h.d+'</i></span>';
+      stage.appendChild(b);
+    });
+  }
+  function closeHS(){
+    [].slice.call(document.querySelectorAll('.hs[aria-expanded="true"]'))
+      .forEach(function(b){ b.setAttribute('aria-expanded','false'); });
+    cellEl.classList.remove('on');
+  }
+  function openHS(b){
+    if (b.getAttribute('aria-expanded') === 'true') return;
+    closeHS();
+    b.setAttribute('aria-expanded','true');
+    var pr = prod.getBoundingClientRect(), br = b.getBoundingClientRect();
+    var cx = br.left + br.width/2 - pr.left, cy = br.top + br.height/2 - pr.top;
+    cellEl.style.setProperty('--cx', Math.floor(cx/104)*104 + 'px');
+    cellEl.style.setProperty('--cy', Math.floor(cy/104)*104 + 'px');
+    cellEl.classList.add('on');
+  }
+  var canHover = window.matchMedia('(hover:hover)');
+  document.addEventListener('pointerover',function(e){
+    if (!canHover.matches || !e.target.closest) return;
+    var b = e.target.closest('.hs'); if (b) openHS(b);
+  });
+  document.addEventListener('pointerout',function(e){
+    if (!canHover.matches || !e.target.closest) return;
+    var b = e.target.closest('.hs');
+    if (b && !b.contains(e.relatedTarget)) closeHS();
+  });
+  document.addEventListener('focusin',function(e){
+    var b = e.target.closest && e.target.closest('.hs'); if (b) openHS(b);
+  });
+  prod.addEventListener('pointermove',function(e){
+    var pr = prod.getBoundingClientRect();
+    ptrEl.style.setProperty('--mx', (e.clientX - pr.left)+'px');
+    ptrEl.style.setProperty('--my', (e.clientY - pr.top)+'px');
+  });
+
+  document.addEventListener('click',function(e){
+    if (!e.target.closest) return;
+    var h = e.target.closest('.hs');
+    if (h){
+      e.preventDefault();
+      if (h.getAttribute('aria-expanded') === 'true') closeHS(); else openHS(h);
+      return;
+    }
+    var r = e.target.closest('.route');
+    if (r){ openProduct(r.dataset.open); }
+  });
+  $('#back').addEventListener('click', closeProduct);
+
+  /* ---- prototype chrome ---- */
+  var body = document.body;
+  function setVP(mode){
+    body.dataset.vp = mode;
+    $('#vpPhone').setAttribute('aria-pressed', mode==='phone');
+    $('#vpFull').setAttribute('aria-pressed', mode==='full');
+  }
+  $('#vpPhone').addEventListener('click',function(){ setVP('phone'); });
+  $('#vpFull').addEventListener('click',function(){ setVP('full'); });
+  setVP(window.innerWidth < 900 ? 'full' : 'phone');
+
+  var notes = $('#notes'), nb = $('#notesBtn');
+  function setNotes(open){
+    notes.classList.toggle('open', open);
+    nb.setAttribute('aria-pressed', open);
+  }
+  nb.addEventListener('click',function(){ setNotes(!notes.classList.contains('open')); });
+  $('#notesClose').addEventListener('click',function(){ setNotes(false); });
+  document.addEventListener('keydown',function(e){
+    if (e.key === 'Escape'){ setNotes(false); closeHS(); closeProduct(); }
+  });
+})();
+</script>

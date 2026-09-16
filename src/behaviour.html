@@ -1,0 +1,229 @@
+<script>
+(function(){
+  document.documentElement.classList.add('js');
+
+  var P = {
+    OPTIC:{n:'01',ab:'OPT',cat:'Eyewear',price:'€240',ref:'REF BC-01-052 · Cadore, IT',
+      img:'img/optic-cut.png',env:'img/optic-env.jpg',
+      desc:'Polarised mineral glass in an injection-moulded acetate frame. Riveted barrel hinge, no visible fixings.',
+      specs:[['Frame','INJECTION-MOULDED ACETATE'],['Lens','POLARISED MINERAL GLASS'],
+             ['Category','3 / 12 % VLT'],['Hinge','RIVETED BARREL'],['Width','142 MM'],
+             ['Weight','31 G'],['Origin','CADORE, IT']]},
+    ELIXIR:{n:'02',ab:'ELX',cat:'Fragrance',price:'€145',ref:'REF BC-02-050 · Grasse, FR',
+      img:'img/elixir-cut.png',env:'img/elixir-env.jpg',
+      desc:'Iris and black pepper over a dry mineral base. Fifty millilitres in anodised aluminium.',
+      specs:[['Concentration','EAU DE PARFUM / 18 %'],['Volume','50 ML / 1.7 FL OZ'],
+             ['Top','BERGAMOT / PINK PEPPER'],['Heart','IRIS / ORRIS ROOT'],
+             ['Base','VETIVER / LABDANUM'],['Vessel','ANODISED ALUMINIUM'],['Origin','GRASSE, FR']]},
+    SONAR:{n:'03',ab:'SON',cat:'Audio',price:'€180',ref:'REF BC-03-092',
+      img:'img/sonar-cut.png',env:'img/sonar-env.jpg',
+      desc:'A 9.2 mm dynamic driver in a machined housing. Kevlar-cored cable, three-button inline control.',
+      specs:[['Driver','9.2 MM DYNAMIC'],['Impedance','32 Ω'],['Sensitivity','104 DB / MW'],
+             ['Cable','1.2 M OFC, KEVLAR CORE'],['Connector','3.5 MM TRRS'],
+             ['Control','3-BUTTON INLINE'],['Weight','14 G']]}
+  };
+  var HS = {
+    OPTIC:[
+      {x:21,y:54,s:'l',t:'Polarised lens',d:'Ground mineral glass, category 3. Twelve per cent visible light transmission.'},
+      {x:60,y:38,s:'',t:'Barrel hinge',d:'Five-barrel and riveted. No visible fixings on the outer face.'},
+      {x:72,y:45,s:'r',t:'Crow mark',d:'Milled into the temple and inlaid by hand after polishing.'}],
+    ELIXIR:[
+      {x:50,y:11,s:'',t:'Machined cap',d:'Anodised aluminium on a magnetic seat. Closes without a thread.'},
+      {x:50,y:46,s:'',t:'Pad-printed mark',d:'Two-pass print held to a 0.2 mm registration tolerance.'},
+      {x:50,y:88,s:'',t:'Batch etch',d:'Laser-etched batch and fill date. Composed in Grasse.'}],
+    SONAR:[
+      {x:62,y:20,s:'r',t:'9.2 mm driver',d:'Bio-cellulose diaphragm in a machined housing.'},
+      {x:33,y:52,s:'l',t:'Inline control',d:'Three anodised buttons with a tactile detent.'},
+      {x:70,y:89,s:'r',t:'3.5 mm TRRS',d:'Gold-plated, with a moulded strain relief.'}]
+  };
+  var ORDER = ['OPTIC','ELIXIR','SONAR'];
+  var $ = function(s){ return document.querySelector(s); };
+  var home = $('#home'), chapters = [].slice.call(document.querySelectorAll('.chapter'));
+
+  /* ---- navigator ---- */
+  var rail = $('#rail');
+  ORDER.forEach(function(k,i){
+    var b = document.createElement('button');
+    b.innerHTML = '<span class="n">'+P[k].n+'</span><span class="ab">'+P[k].ab+'</span>';
+    b.setAttribute('aria-label','Chapter '+P[k].n+' — '+k);
+    b.addEventListener('click',function(){
+      chapters[i].scrollIntoView({behavior: motionOK() ? 'smooth' : 'auto'});
+    });
+    rail.appendChild(b);
+  });
+  var railBtns = [].slice.call(rail.children);
+  function motionOK(){ return !window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
+  function setActive(i){
+    railBtns.forEach(function(b,j){ b.setAttribute('aria-current', j===i ? 'true':'false'); });
+  }
+
+  /* ---- chapter entry ---- */
+  chapters[0].classList.add('in'); setActive(0);
+  if ('IntersectionObserver' in window){
+    var io = new IntersectionObserver(function(es){
+      es.forEach(function(e){
+        if (e.isIntersecting){
+          e.target.classList.add('in');
+          if (e.intersectionRatio > .55) setActive(+e.target.dataset.i);
+        }
+      });
+    },{root:home, threshold:[.25,.6]});
+    chapters.forEach(function(c){ io.observe(c); });
+  } else {
+    chapters.forEach(function(c){ c.classList.add('in'); });
+  }
+
+  /* ---- product tilt on the homepage chapters ---- */
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var hoverOK = window.matchMedia('(hover:hover)');
+  chapters.forEach(function(ch){
+    var img = ch.querySelector('.prod');
+    if (!img) return;
+    var raf = null, pending = null;
+    function apply(){
+      raf = null;
+      if (!pending) return;
+      var nx = pending[0], ny = pending[1];
+      img.style.setProperty('--ry', (nx * 15).toFixed(2) + 'deg');
+      img.style.setProperty('--rx', (-ny * 10).toFixed(2) + 'deg');
+      img.style.setProperty('--tx', (nx * 18).toFixed(1) + 'px');
+      img.style.setProperty('--ty', (-9 + ny * 6).toFixed(1) + 'px');
+      img.style.setProperty('--sc', '1.05');
+      ch.style.setProperty('--hx', (-nx * 9).toFixed(1) + 'px');
+    }
+    function active(){ return hoverOK.matches && !reduce.matches; }
+    img.addEventListener('pointerenter', function(){
+      if (active()) img.classList.add('tracking');
+    });
+    img.addEventListener('pointermove', function(e){
+      if (!active()) return;
+      var r = img.getBoundingClientRect();
+      pending = [(e.clientX - r.left)/r.width - .5, (e.clientY - r.top)/r.height - .5];
+      if (!raf) raf = requestAnimationFrame(apply);
+    });
+    img.addEventListener('pointerleave', function(){
+      pending = null;
+      if (raf){ cancelAnimationFrame(raf); raf = null; }
+      img.classList.remove('tracking');
+      ['--ry','--rx','--tx','--ty'].forEach(function(v){ img.style.setProperty(v, v === '--ry' || v === '--rx' ? '0deg' : '0px'); });
+      img.style.setProperty('--sc','1');
+      ch.style.setProperty('--hx','0px');
+    });
+  });
+
+  /* ---- product page ---- */
+  var prod = $('#product'), glyphs = $('#glyphs');
+  function openProduct(k){
+    var d = P[k];
+    $('#pCat').innerHTML = '[ '+d.n+' / 03 ] &nbsp; '+d.cat;
+    var g = glyphs.querySelector('[data-g="'+k+'"] svg').cloneNode(true);
+    var nm = $('#pName'); nm.innerHTML=''; nm.appendChild(g);
+    $('#pDesc').textContent = d.desc;
+    $('#pPrice').textContent = d.price;
+    $('#pRef').textContent = d.ref;
+    var img = $('#pImg'), stage = $('#pStage');
+    img.alt = k + ' product image';
+    var fit = function(){
+      if (img.naturalWidth) stage.style.setProperty('--ar', img.naturalWidth/img.naturalHeight);
+    };
+    img.onload = fit; img.src = d.img; fit();
+    renderHotspots(k, stage);
+    var dl = $('#pSpecs'); dl.innerHTML='';
+    d.specs.forEach(function(r){
+      var w=document.createElement('div');
+      w.innerHTML = '<dt>'+r[0]+'</dt><dd>'+r[1]+'</dd>';
+      dl.appendChild(w);
+    });
+    closeHS();
+    prod.classList.add('open'); prod.setAttribute('aria-hidden','false');
+    $('.pscroll').scrollTop = 0; $('#back').focus();
+  }
+  function closeProduct(){
+    closeHS();
+    prod.classList.remove('open'); prod.setAttribute('aria-hidden','true');
+  }
+  /* ---- feature hotspots ---- */
+  var cellEl = $('#cell'), ptrEl = $('#ptr');
+  function renderHotspots(k, stage){
+    [].slice.call(stage.querySelectorAll('.hs')).forEach(function(b){ b.remove(); });
+    (HS[k]||[]).forEach(function(h){
+      var b = document.createElement('button');
+      b.className = 'hs' + (h.s ? ' cal-'+h.s : '');
+      b.style.left = h.x+'%'; b.style.top = h.y+'%';
+      b.setAttribute('aria-expanded','false');
+      b.setAttribute('aria-label', h.t + '. ' + h.d);
+      b.innerHTML = '<span class="ring"></span><span class="dot"></span>' +
+        '<span class="cal"><b>'+h.t+'</b><i>'+h.d+'</i></span>';
+      stage.appendChild(b);
+    });
+  }
+  function closeHS(){
+    [].slice.call(document.querySelectorAll('.hs[aria-expanded="true"]'))
+      .forEach(function(b){ b.setAttribute('aria-expanded','false'); });
+    cellEl.classList.remove('on');
+  }
+  function openHS(b){
+    if (b.getAttribute('aria-expanded') === 'true') return;
+    closeHS();
+    b.setAttribute('aria-expanded','true');
+    var pr = prod.getBoundingClientRect(), br = b.getBoundingClientRect();
+    var cx = br.left + br.width/2 - pr.left, cy = br.top + br.height/2 - pr.top;
+    cellEl.style.setProperty('--cx', Math.floor(cx/104)*104 + 'px');
+    cellEl.style.setProperty('--cy', Math.floor(cy/104)*104 + 'px');
+    cellEl.classList.add('on');
+  }
+  var canHover = window.matchMedia('(hover:hover)');
+  document.addEventListener('pointerover',function(e){
+    if (!canHover.matches || !e.target.closest) return;
+    var b = e.target.closest('.hs'); if (b) openHS(b);
+  });
+  document.addEventListener('pointerout',function(e){
+    if (!canHover.matches || !e.target.closest) return;
+    var b = e.target.closest('.hs');
+    if (b && !b.contains(e.relatedTarget)) closeHS();
+  });
+  document.addEventListener('focusin',function(e){
+    var b = e.target.closest && e.target.closest('.hs'); if (b) openHS(b);
+  });
+  prod.addEventListener('pointermove',function(e){
+    var pr = prod.getBoundingClientRect();
+    ptrEl.style.setProperty('--mx', (e.clientX - pr.left)+'px');
+    ptrEl.style.setProperty('--my', (e.clientY - pr.top)+'px');
+  });
+
+  document.addEventListener('click',function(e){
+    if (!e.target.closest) return;
+    var h = e.target.closest('.hs');
+    if (h){
+      e.preventDefault();
+      if (h.getAttribute('aria-expanded') === 'true') closeHS(); else openHS(h);
+      return;
+    }
+    var r = e.target.closest('.route');
+    if (r){ openProduct(r.dataset.open); }
+  });
+  $('#back').addEventListener('click', closeProduct);
+
+  /* ---- prototype chrome ---- */
+  var body = document.body;
+  function setVP(mode){
+    body.dataset.vp = mode;
+    $('#vpPhone').setAttribute('aria-pressed', mode==='phone');
+    $('#vpFull').setAttribute('aria-pressed', mode==='full');
+  }
+  $('#vpPhone').addEventListener('click',function(){ setVP('phone'); });
+  $('#vpFull').addEventListener('click',function(){ setVP('full'); });
+  setVP(window.innerWidth < 900 ? 'full' : 'phone');
+
+  var notes = $('#notes'), nb = $('#notesBtn');
+  function setNotes(open){
+    notes.classList.toggle('open', open);
+    nb.setAttribute('aria-pressed', open);
+  }
+  nb.addEventListener('click',function(){ setNotes(!notes.classList.contains('open')); });
+  $('#notesClose').addEventListener('click',function(){ setNotes(false); });
+  document.addEventListener('keydown',function(e){
+    if (e.key === 'Escape'){ setNotes(false); closeHS(); closeProduct(); }
+  });
+})();
+</script>
