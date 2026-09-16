@@ -81,8 +81,10 @@ Google Fonts.
   a lead time.
 - **Product photography is client-supplied** and remains the property of Bluecrow.
 - **Product imagery is low resolution.** The supplied cutouts are roughly 470–530 px on
-  their long edge, which is fine at standard density but visibly soft on Retina
-  displays. Higher-resolution exports are a drop-in replacement.
+  their long edge. The desktop product page now scales them 1.3–1.5x to fill the
+  composition, which holds up at standard density but is visibly soft on Retina
+  displays. Exports at roughly 1400 px on the long edge would clear this, and are a
+  drop-in replacement — no code change needed.
 - **A fourth product (Ignis) was specified but removed** pending photography. Restoring
   it means adding a chapter to `src/markup.html`, an entry to the product data in
   `src/behaviour.html`, its cutout and plate to `img/`, and updating the `/ 03` counters.
