@@ -18,13 +18,19 @@ words = json.loads((HERE / "words.json").read_text())
 doc = "\n".join((HERE / p).read_text() for p in PARTS)
 
 def glyph(m):
-    key = m.group(1)
-    w = words[key]
-    return ('<svg class="mk" viewBox="%s" xmlns="http://www.w3.org/2000/svg" '
-            'role="img" aria-label="%s"><path d="%s"/></svg>'
-            % (w["viewBox"], LABEL[key], w["d"]))
+    """{{W:KEY}} is the labelled instance; {{WD:KEY}} is a decorative duplicate.
 
-doc, n = re.subn(r"\{\{W:([A-Za-z]+)\}\}", glyph, doc)
+    The outline and fill copies of a headline are the same letterforms, so only the
+    first carries the accessible name - otherwise every product is announced twice.
+    """
+    decorative, key = m.group(1) == "WD", m.group(2)
+    w = words[key]
+    naming = ('aria-hidden="true"' if decorative
+              else 'role="img" aria-label="%s"' % LABEL[key])
+    return ('<svg class="mk" viewBox="%s" xmlns="http://www.w3.org/2000/svg" %s>'
+            '<path d="%s"/></svg>' % (w["viewBox"], naming, w["d"]))
+
+doc, n = re.subn(r"\{\{(WD?):([A-Za-z]+)\}\}", glyph, doc)
 
 esc_html = lambda t: "".join(c if ord(c) < 128 else "&#%d;" % ord(c) for c in t)
 esc_js   = lambda t: "".join(c if ord(c) < 128 else "\\u%04X" % ord(c) for c in t)

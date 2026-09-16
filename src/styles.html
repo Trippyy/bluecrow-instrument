@@ -85,9 +85,18 @@ body[data-vp="phone"] #stage{width:390px;height:min(844px,100%);border:1px solid
 .headline{position:absolute;left:-4%;bottom:var(--base);z-index:2;color:var(--white)}
 .headline svg{height:var(--hh);width:auto;transform:translate3d(var(--hx,0px),0,0);
   transition:transform .6s cubic-bezier(.22,.7,.2,1)}
+/* the name sits as an outline until the product is engaged, then floods solid */
+.headline > svg.mk{fill:none;stroke:currentColor;stroke-width:1.7;
+  vector-effect:non-scaling-stroke;stroke-linejoin:round}
+.headline .fill{position:absolute;inset:0;display:block;pointer-events:none;
+  clip-path:inset(0 100% 0 0);
+  transition:clip-path .82s cubic-bezier(.33,.9,.28,1)}
+.chapter.lit .headline .fill{clip-path:inset(0 0 0 0)}
+/* no hover to give: fill as each chapter arrives instead */
+@media(hover:none){.chapter.in .headline .fill{clip-path:inset(0 0 0 0)}}
 .prodwrap{position:absolute;left:50%;transform:translateX(-50%);
   bottom:calc(var(--base) + var(--hh)*.62);width:86%;height:44cqh;z-index:3;
-  perspective:1000px}
+  perspective:1000px;padding:0;display:block}
 .prod{width:100%;height:100%;display:block;object-fit:contain;object-position:center bottom;
   transform-origin:center bottom;
   filter:drop-shadow(0 20px 30px rgba(0,0,0,.62));
@@ -128,6 +137,7 @@ body[data-vp="phone"] #stage{width:390px;height:min(844px,100%);border:1px solid
   .hatch{animation:none}
   .ptr,.cell,.cal{transition:none}
   .buy .route::after,.buy .route span,.rail button::before,.rail .n,.rail .ab{transition:none}
+  .headline .fill{transition:none}
   .js .chapter .headline,.js .chapter .prodwrap,
   .js .chapter .info,.js .chapter .buy,.js .chapter .env{opacity:1;transition:none}
   .js .chapter .prodwrap{transform:translateX(-50%)}
@@ -243,6 +253,7 @@ body[data-vp="phone"] #stage{width:390px;height:min(844px,100%);border:1px solid
   .rail{top:64px;width:64px}
   .rail button{font-size:10px;gap:11px}
   .chapter{--hh:min(30cqh,38cqw); --base:max(196px,27cqh)}
+  .headline > svg.mk{stroke-width:2}
   .headline{left:-1.5%}
   .prodwrap{left:52%;width:42%;height:40cqh}
   .glow{left:52%;width:46%;height:46cqh}

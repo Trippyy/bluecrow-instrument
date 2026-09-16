@@ -48,6 +48,12 @@ rows and the purchase block, and nothing else.
 point of a product plate under its scrim. The neutral scale is three deliberate steps:
 `--white` 18.5:1, `--grey` 7.5:1, `--dim` 4.9:1.
 
+**The name is an outline until you engage.** Each product name sits as a hairline stroke
+over the scene. Hovering the product floods it solid left to right, so the headline
+belongs to the object rather than sitting behind it. The product itself is the control:
+it is a button, it tilts toward the cursor, and it opens its own page. Devices without
+hover fill the name as each chapter arrives instead.
+
 **Motion.** Chapter entry settles the environment before the product, so depth reads
 before detail. Products tilt toward the cursor in 3D while the headline drifts a few
 pixels the other way, making the parallax real. Everything is gated behind
