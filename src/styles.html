@@ -2,7 +2,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400&display=swap">
 <style>
 :root{
-  --void:#000; --white:#EEF1F5; --grey:#78828F; --dim:#434B56; --faint:#222830;
+  --void:#000; --white:#EEF1F5; --grey:#909CAC; --dim:#727B88;
   --blue:#0066B0; --blue-lift:#1E8AE6;
   --l1:rgba(238,241,245,.08); --l2:rgba(238,241,245,.15); --l3:rgba(238,241,245,.30);
   --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
@@ -23,9 +23,9 @@ a{color:inherit;text-decoration:none}
   border-bottom:1px solid var(--l1);font-family:var(--mono);font-size:9.5px;
   letter-spacing:.18em;text-transform:uppercase;color:var(--dim);background:#030405}
 .chrome .sp{flex:1}
-.chrome .seg{display:flex;border:1px solid var(--l2)}
+.chrome .seg{display:flex;border:1px solid rgba(238,241,245,.37)}
 .chrome .seg button{padding:4px 10px;letter-spacing:.18em;font-size:9.5px;color:var(--dim)}
-.chrome .seg button[aria-pressed="true"]{background:var(--blue);color:#000}
+.chrome .seg button[aria-pressed="true"]{background:var(--blue);color:#FFFFFF}
 .chrome .nt[aria-pressed="true"]{color:var(--blue-lift)}
 .stagewrap{flex:1;min-height:0;display:grid;place-items:center;padding:0}
 body[data-vp="phone"] .stagewrap{padding:16px}
@@ -218,7 +218,7 @@ body[data-vp="phone"] #stage{width:390px;height:min(844px,100%);border:1px solid
 .pbuy .add{flex:1;border:1px solid var(--blue);color:var(--blue-lift);padding:15px 18px;
   font-family:var(--mono);font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;
   text-align:center;transition:background .25s,color .25s}
-.pbuy .add:hover{background:var(--blue);color:#000}
+.pbuy .add:hover{background:var(--blue);color:#FFFFFF}
 .pnote{margin-top:16px;font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;color:var(--dim);
   text-transform:uppercase}
 

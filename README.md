@@ -43,6 +43,11 @@ drifting hatch, with a cell that lights up and slides to whichever feature you i
 purchase border. One hairline weight divides the top bar, the rail, the specification
 rows and the purchase block, and nothing else.
 
+**Contrast.** Every text pair meets WCAG 2.1 AA (4.5:1), and interactive boundaries meet
+1.4.11 (3:1), measured against the real backdrop each sits on — including the brightest
+point of a product plate under its scrim. The neutral scale is three deliberate steps:
+`--white` 18.5:1, `--grey` 7.5:1, `--dim` 4.9:1.
+
 **Motion.** Chapter entry settles the environment before the product, so depth reads
 before detail. Products tilt toward the cursor in 3D while the headline drifts a few
 pixels the other way, making the parallax real. Everything is gated behind
